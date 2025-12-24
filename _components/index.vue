@@ -588,6 +588,25 @@ export default {
     tableActions() {
       //Default response
       let response = [];
+      //adds kanban actions 
+      if(this.readShowAs == 'kanban' ){
+        response.push({
+          label: this.localShowAs == 'kanban' ? 'Table view' : 'Kanban view',
+          //vIf: !this.isMobile,
+          props: {
+            icon: this.localShowAs == 'kanban' ? 'fa-light fa-table' : 'fa-light fa-chart-kanban',
+            id: 'switchKanbanButton'
+          },
+          action: () => {
+            if(this.readShowAs == 'kanban'){
+              this.localShowAs = this.localShowAs === 'kanban' ? 'table' : 'kanban';
+              this.getDataTable()
+            }
+            
+          }
+        })
+      }
+
       if (this.readShowAs !== 'kanban') {
         response.push({
           label: this.$tr(`isite.cms.message.${this.localShowAs == 'grid' ? 'listView' : 'gribView'}`),
