@@ -55,6 +55,7 @@
         <kanban v-show="localShowAs === 'kanban' && params.read.kanban"
                 :routes="params.read.kanban" ref="kanban"
                 :filter="getDynamicFilterValues"
+                @getDataTable="getDataTable"
         />
         <!-- Drag View-->
         <div v-if="localShowAs === 'drag' && dataDraggable.length"
@@ -1323,6 +1324,39 @@ export default {
             })
           }
         })
+      }
+
+      /* Default kanban card actions */
+      if( this.readShowAs == 'kanban' ){
+
+        //Add custom kanban card actions
+        response.push(...this.params.read.actions)
+
+        /* Edit card  action */
+        if(this.params.read?.kanban?.permissions?.card?.edit){
+          response.push(
+          {
+            name: 'viewLead',
+            label: this.$tr('isite.cms.label.information'),
+            icon: 'fas fa-info-circle',
+            action: (item) => {
+              this.$refs.kanban.showModal(item)
+            }
+          })
+        }
+        /* Delete card  action */
+        if(this.params.read?.kanban?.permissions?.card?.delete){
+          response.push({
+            icon: 'fa-light fa-trash-can',
+            color: 'red',
+            label: this.$tr('isite.cms.label.delete'),
+            action: (item) => {
+              this.$refs.kanban.deleteKanbanCard(item).then(() => {
+                this.getDataTable(true)
+              })
+            }
+          })
+        }
       }
 
       const responseNameActions = response.map(item => item.name)
