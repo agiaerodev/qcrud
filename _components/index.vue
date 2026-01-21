@@ -51,12 +51,8 @@
           :apiRouteOrderFolders="apiRouteOrderFolders"
           v-if="localShowAs === 'folders'"
         />
-        <!-- Kanban View-->
-        <kanban v-show="localShowAs === 'kanban' && params.read.kanban"
-                :routes="params.read.kanban" ref="kanban"
-                :filter="getDynamicFilterValues"
-                @getDataTable="getDataTable"
-        />
+        
+        
         <!-- Drag View-->
         <div v-if="localShowAs === 'drag' && dataDraggable.length"
              class="q-pt-sm q-pr-sm q-pl-md">
@@ -487,7 +483,6 @@ export default {
     return {
       getRelationData: this.getRelationData,
       updateRelationData: this.updateRelationData,
-      funnelPageAction: computed(() => this.funnelId),
       fieldActions: this.fieldActions,
       getFieldRelationActions: this.getFieldRelationActions
     };
@@ -937,20 +932,13 @@ export default {
     async getDataTable(refresh = false, filter = {}, pagination = false) {
       const filters = this.getDynamicFilterValues;
       //this.dynamicFilterValues = filter
-      //Call data table
-      if (this.$refs.kanban && this.params.read.kanban && this.localShowAs === 'kanban') {
-        const filterName = this.params.read.kanban.column.filter.name || '';
-        this.funnelId = String(this.getDynamicFilterValues[filterName] || null);
-        await this.$refs.kanban.setSearch(this.searchKanban);
-        await this.$refs.kanban.init(refresh);
-        return;
-      } else {
-        this.getData({
-            pagination: { ...this.table.pagination, ...(pagination || {}) },
-            filter: { ...this.table.filter, ...(filters || {}) }
-          },
-          refresh);
-      }
+      //Call data table     
+      this.getData({
+          pagination: { ...this.table.pagination, ...(pagination || {}) },
+          filter: { ...this.table.filter, ...(filters || {}) }
+        },
+        refresh);
+     
       this.hideExpandedRows()
     },
     hideExpandedRows() {
