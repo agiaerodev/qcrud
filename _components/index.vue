@@ -23,8 +23,10 @@
             (filters) => updateDynamicFilterValues(filters)
           "
           :tableColumns="tableColumns"
+          :visibleColumns="visibleColumns"
           :showColumnsButton="['table', 'grid'].includes(localShowAs)"
-          @visibleColumns="(value) => (this.visibleColumns = value)"
+          @visibleColumns="(value) => setVisibleColumns(value)"
+          @updateVisibleColumns="(value) => updateVisibleColumns(value)"
         />
         <!-- dashboardRenderer -->
         <dashboardRenderer
@@ -693,6 +695,7 @@ import axios from 'axios';
 import dashboardRenderer from 'modules/qsite/_components/master/dashboardRenderer';
 import storeModalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/stores';
 import modalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/index.vue';
+import { updateOrCreateUserPreferences } from '../_services/userPreferences';
 
 export default {
   props: {
@@ -1181,6 +1184,9 @@ export default {
         ? this.$tr('isite.cms.label.showLess')
         : this.$tr('isite.cms.label.showMore');
     },
+    visibleColumnsKey(){
+      return `${this.params.apiRoute}-table-columns`
+    }
   },
   methods: {
     async loadComponent() {
@@ -2087,6 +2093,26 @@ export default {
       if(ref){
         ref[val.method](val?.args || null)
       }
+    },
+    /* set table visible columns form user-preferences */
+    setVisibleColumns(cols){
+      let userData = this.$store.state.quserAuth.userData
+      let userCols = null
+      if(userData?.preferences?.length){
+        userCols = userData.preferences.find(item => item.key == this.visibleColumnsKey)
+      }
+      this.visibleColumns =  userCols ? userCols.value : cols
+    },
+    /* saves table visible columns on user-preferences */
+    updateVisibleColumns(cols){
+      this.visibleColumns = cols
+      const data = {
+        key: this.visibleColumnsKey,
+        value: cols
+      }
+      updateOrCreateUserPreferences(data).then( (response) => {
+        this.$store.dispatch('quserAuth/AUTH_UPDATE')
+      })
     }
   },
 };
