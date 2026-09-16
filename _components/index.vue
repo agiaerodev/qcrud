@@ -695,7 +695,7 @@ import axios from 'axios';
 import dashboardRenderer from 'modules/qsite/_components/master/dashboardRenderer';
 import storeModalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/stores';
 import modalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/index.vue';
-import { updateOrCreateUserPreferences } from '../_services/userPreferences';
+import { updateOrCreateUserPreferences } from 'modules/quser/_services/userPreferences';
 
 export default {
   props: {
