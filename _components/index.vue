@@ -27,6 +27,8 @@
           :showColumnsButton="['table', 'grid'].includes(localShowAs)"
           @visibleColumns="(value) => setVisibleColumns(value)"
           @updateVisibleColumns="(value) => updateVisibleColumns(value)"
+          @sortTableColumns="(value) => sortedColumns = value"
+          @resetVisibleColumns="resetVisibleColumns()"
         />
         <!-- dashboardRenderer -->
         <dashboardRenderer
@@ -796,6 +798,7 @@ export default {
       expiresIn: null,
       dynamicFilterValues: {},
       visibleColumns: [],
+      sortedColumns: [],
       showAllRows: false,
       dataDynamicCrud: null,
     };
@@ -956,6 +959,16 @@ export default {
     //return table columns
     tableColumns() {
       let columns = this.$clone(this.params.read.columns);
+      /* sorts the columns from user preferences */
+      if(this.sortedColumns.length){
+        const newCols = []
+        this.sortedColumns.forEach((orderCol) => {
+          const col = columns.find(item => item.name == orderCol.name)
+          if(col) newCols.push(col)
+        })
+        columns = newCols
+      }
+      
       //Check columns
       columns.forEach((column) => {
         //Default sort by id
@@ -2099,13 +2112,39 @@ export default {
       let userData = this.$store.state.quserAuth.userData
       let userCols = null
       if(userData?.preferences?.length){
-        userCols = userData.preferences.find(item => item.key == this.visibleColumnsKey)
+        userCols = userData.preferences.find(item => item.key == this.visibleColumnsKey) || null
+        if(userCols){
+          this.sortedColumns = userCols.value
+          userCols = userCols.value.filter(item => item.show == true).map(item => item.name)
+        }        
       }
-      this.visibleColumns =  userCols ? userCols.value : cols
+      this.visibleColumns =  userCols ? userCols : cols
     },
     /* saves table visible columns on user-preferences */
     updateVisibleColumns(cols){
-      this.visibleColumns = cols
+      this.visibleColumns = cols.filter(item => item.show == true).map(item => item.name)      
+      const data = {
+        key: this.visibleColumnsKey,
+        value: cols
+      }
+      updateOrCreateUserPreferences(data).then( (response) => {
+        this.$store.dispatch('quserAuth/AUTH_UPDATE')
+      })
+    },
+    /* restores the */
+    resetVisibleColumns(){
+      let columns = this.$clone(this.params.read.columns);
+      
+      this.visibleColumns = columns.map(item => item.name)
+      this.sortedColumns = []      
+
+      const cols = columns.map(item => {
+        return {
+          name: item.name, 
+          show: true
+        }
+      })
+
       const data = {
         key: this.visibleColumnsKey,
         value: cols
