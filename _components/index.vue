@@ -11,6 +11,7 @@
           @search="(val) => search(val)"
           @new="handlerActionCreate()"
           @refresh="getDataTable(true)"
+          :multipleRefresh="true"
           ref="pageActionRef"
           :tour-name="tourName"
           :help="help"
