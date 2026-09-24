@@ -738,9 +738,9 @@ export default {
       }
     },
   },
-  created() {
+  async created() {
     this.$helper.setDynamicSelectList({});
-    this.getDynamicCrud();
+    await this.getDynamicCrud();
   },
   beforeMount() {
     this.loadComponent();
@@ -2137,7 +2137,7 @@ export default {
       let columns = this.$clone(this.params.read.columns);
       
       this.visibleColumns = columns.map(item => item.name)
-      this.sortedColumns = []      
+      this.sortedColumns = []
 
       const cols = columns.map(item => {
         return {
