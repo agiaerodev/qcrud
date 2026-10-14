@@ -100,6 +100,7 @@
           :pagination.sync="table.pagination"
           @request="getData"
           class="stick-table"
+          :class="stickyHeaderClass"
           :table-class="localShowAs === 'folders' ? 'tw-hidden' : ''"
           ref="tableComponent"
           card-container-class="q-col-gutter-md"
@@ -1200,6 +1201,9 @@ export default {
     },
     visibleColumnsKey(){
       return `${this.params.apiRoute}-table-columns`
+    }, 
+    stickyHeaderClass() {
+      return this.table.pagination.rowsPerPage > 10 ? 'sticky-header-table' : '';
     }
   },
   methods: {
@@ -1236,6 +1240,7 @@ export default {
     //init form
     async init() {
       this.localShowAs = this.readShowAs;
+      await this.setRowsPerPage();
       this.handlerUrlCrudAction(); //Handler url action
       //if (!this.params.read.filterName || this.isAppOffline) this.getDataTable()//Get data
       //Emit mobile main action
@@ -2108,17 +2113,32 @@ export default {
         ref[val.method](val?.args || null)
       }
     },
+
+    getUserPreferences() {
+      let userData = this.$store.state.quserAuth.userData
+      let preferences = null
+      if(userData?.preferences?.length){
+        preferences = userData.preferences.find(item => item.key == this.visibleColumnsKey) || null        
+      }
+      return preferences;
+    },
+
+
+    setRowsPerPage(){
+      const preferences = this.getUserPreferences()
+      const rowsPerPage = preferences?.value?.rowsPerPage || 10
+      this.table.pagination.rowsPerPage = rowsPerPage;
+    },
+
     /* set table visible columns form user-preferences */
     setVisibleColumns(cols){
-      let userData = this.$store.state.quserAuth.userData
+      let preferences = this.getUserPreferences()
       let userCols = null
-      if(userData?.preferences?.length){
-        userCols = userData.preferences.find(item => item.key == this.visibleColumnsKey) || null
-        if(userCols){
-          this.sortedColumns = userCols.value
-          userCols = userCols.value.filter(item => item.show == true).map(item => item.name)
-        }        
-      }
+        if(preferences){
+          this.sortedColumns = preferences.value
+          userCols = preferences.value.filter(item => item.show == true).map(item => item.name)
+        }       
+      
       this.visibleColumns =  userCols ? userCols : cols
     },
     /* saves table visible columns on user-preferences */
@@ -2286,6 +2306,41 @@ export default {
 
   #dialogFilters {
     min-height: max-content !important;
+  }
+}
+
+.sticky-header-table {
+  /* height or max-height is important */
+  height: 600px;
+
+  .q-table__top,
+  //.q-table__bottom,
+  thead tr:first-child th {
+    /* bg color is important for th; just specify one */
+    background-color: #fff !important;
+  }
+
+  thead tr th {
+    position: sticky !important;
+    z-index: 10 !important;
+    /* covers any sub-pixel gap between sticky cells */
+    //box-shadow: -1px 0 0 $grey-1;
+  }
+
+  thead tr:first-child th {
+    top: 0 !important;
+  }
+
+  /* this is when the loading indicator appears */
+  &.q-table--loading thead tr:last-child th {
+    /* height of all previous header rows */
+    top: 48px !important;
+  }
+
+  /* prevent scrolling behind sticky top row on focus */
+  tbody {
+    /* height of all previous header rows */
+    scroll-margin-top: 48px !important;   
   }
 }
 </style>
