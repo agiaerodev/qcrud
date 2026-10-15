@@ -630,6 +630,7 @@
                       () => {
                         table.pagination.page = 1;
                         getDataTable();
+                        updateRowsPerPage()
                       }
                     "
                     options-cover
@@ -699,7 +700,7 @@ import axios from 'axios';
 import dashboardRenderer from 'modules/qsite/_components/master/dashboardRenderer';
 import storeModalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/stores';
 import modalBuildFilter from 'modules/qsite/_components/master/modalBuildFilter/index.vue';
-import { updateOrCreateUserPreferences } from 'modules/quser/_services/userPreferences';
+import { getUserPreferences, updateOrCreateUserPreferences } from 'modules/quser/_services/userPreferences';
 
 export default {
   props: {
@@ -970,7 +971,7 @@ export default {
         })
         columns = newCols
       }
-      
+
       //Check columns
       columns.forEach((column) => {
         //Default sort by id
@@ -1201,7 +1202,10 @@ export default {
     },
     visibleColumnsKey(){
       return `${this.params.apiRoute}-table-columns`
-    }, 
+    },
+    rowsPerPageKey() {
+      return `${this.params.apiRoute}-rows-per-page`;
+    },
     stickyHeaderClass() {
       return this.table.pagination.rowsPerPage > 10 ? 'sticky-header-table' : '';
     }
@@ -1296,7 +1300,7 @@ export default {
           await col.action(row);
         } else if (typeof col.componentAction === 'function') {
           await this.componentAction(col.componentAction(row));
-        }        
+        }
         else {
           //finding the default action
           let defaultAction = this.fieldActions(col).find((action) => {
@@ -2114,65 +2118,45 @@ export default {
       }
     },
 
-    getUserPreferences() {
-      let userData = this.$store.state.quserAuth.userData
-      let preferences = null
-      if(userData?.preferences?.length){
-        preferences = userData.preferences.find(item => item.key == this.visibleColumnsKey) || null        
-      }
-      return preferences;
-    },
-
-
     setRowsPerPage(){
-      const preferences = this.getUserPreferences()
-      const rowsPerPage = preferences?.value?.rowsPerPage || 10
-      this.table.pagination.rowsPerPage = rowsPerPage;
+      const preferences = getUserPreferences(this.rowsPerPageKey)
+      this.table.pagination.rowsPerPage = preferences || 10
+    },
+    async updateRowsPerPage(){
+      await updateOrCreateUserPreferences(this.rowsPerPageKey, this.table.pagination.rowsPerPage)
     },
 
     /* set table visible columns form user-preferences */
     setVisibleColumns(cols){
-      let preferences = this.getUserPreferences()
+      let preferences = getUserPreferences(this.visibleColumnsKey)
       let userCols = null
         if(preferences){
-          this.sortedColumns = preferences.value
-          userCols = preferences.value.filter(item => item.show == true).map(item => item.name)
-        }       
-      
+          this.sortedColumns = preferences
+          userCols = preferences.filter(item => item.show == true).map(item => item.name)
+        }
+
       this.visibleColumns =  userCols ? userCols : cols
     },
     /* saves table visible columns on user-preferences */
     updateVisibleColumns(cols){
-      this.visibleColumns = cols.filter(item => item.show == true).map(item => item.name)      
-      const data = {
-        key: this.visibleColumnsKey,
-        value: cols
-      }
-      updateOrCreateUserPreferences(data).then( (response) => {
-        this.$store.dispatch('quserAuth/AUTH_UPDATE')
-      })
+      this.visibleColumns = cols.filter(item => item.show == true).map(item => item.name)
+      updateOrCreateUserPreferences(this.visibleColumnsKey, cols)
     },
     /* restores the */
     resetVisibleColumns(){
       let columns = this.$clone(this.params.read.columns);
-      
+
       this.visibleColumns = columns.map(item => item.name)
       this.sortedColumns = []
 
       const cols = columns.map(item => {
         return {
-          name: item.name, 
+          name: item.name,
           show: true
         }
       })
 
-      const data = {
-        key: this.visibleColumnsKey,
-        value: cols
-      }
-      updateOrCreateUserPreferences(data).then( (response) => {
-        this.$store.dispatch('quserAuth/AUTH_UPDATE')
-      })
+      updateOrCreateUserPreferences(this.visibleColumnsKey, cols)
     }
   },
 };
@@ -2340,7 +2324,7 @@ export default {
   /* prevent scrolling behind sticky top row on focus */
   tbody {
     /* height of all previous header rows */
-    scroll-margin-top: 48px !important;   
+    scroll-margin-top: 48px !important;
   }
 }
 </style>
