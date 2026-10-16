@@ -1357,6 +1357,31 @@ export default {
         }
       }
     },
+
+    async setOrderBy(params, pagination){
+        //check and set the order by field and way based on pagination and params
+        let sortBy = pagination?.sortBy || params?.params?.filter?.order?.field  || 'id';
+        // checks if sortBy is in read.requestParams.notToSnakeCase
+        if (!params.params?.notToSnakeCase?.includes(sortBy)) {
+          sortBy = this.$helper.convertStringToSnakeCase(sortBy);
+        }
+
+        let way = pagination?.descending != undefined
+          ? pagination.descending
+            ? 'desc'
+            : 'asc'
+          : 'desc'
+        ;
+        // if pagination.sortBy is not set, uses filter.order.way from crud file
+        if(!pagination?.sortBy && params?.params?.filter?.order?.way){
+           way = params?.params?.filter?.order?.way
+        }
+
+        return {
+          field: sortBy,
+          way
+        };
+    },
     //Get products
     async getData({ pagination, filter }, refresh = false) {
       let propParams = this.$clone(this.params);
@@ -1383,24 +1408,7 @@ export default {
       params.params.take =
         this.readShowAs !== 'drag' ? pagination.rowsPerPage : 9999;
       //Set order by
-      if (!params.params.filter || !params.params.filter.order) {
-        let sortBy = pagination.sortBy || 'id';
-
-        // checks if sortBy is in read.requestParams.notToSnakeCase
-        if (!params.params?.notToSnakeCase?.includes(sortBy)) {
-          sortBy = this.$helper.convertStringToSnakeCase(sortBy);
-        }
-
-        params.params.filter.order = {
-          field: sortBy,
-          way:
-            pagination.descending != undefined
-              ? pagination.descending
-                ? 'desc'
-                : 'asc'
-              : 'desc',
-        };
-      }
+      params.params.filter.order = await this.setOrderBy(params, pagination)
 
       //Merge with params from prop
       if (
