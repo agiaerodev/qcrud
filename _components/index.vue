@@ -18,6 +18,7 @@
           :expires-in="expiresIn"
           @activateTour="$tour.start(tourName)"
           :systemName="systemName"
+          :loadDynamicFilter="loadDynamicFilter"
           :dynamicFilter="dynamicFilter"
           :speech="params.read?.speech"
           @updateDynamicFilterValues="
@@ -804,6 +805,7 @@ export default {
       sortedColumns: [],
       showAllRows: false,
       dataDynamicCrud: null,
+      loadDynamicFilter: false
     };
   },
   computed: {
@@ -1135,6 +1137,7 @@ export default {
     },
     dynamicFilter() {
       if (this.isAppOffline) return false;
+      if(!this.loadDynamicFilter) return {} //force to await dynamic CRUD data before rendering filters
       let baseFilters = {};
       if (
         this.params?.read?.filters &&
@@ -2102,6 +2105,7 @@ export default {
         params
       );
       this.dataDynamicCrud = response.data || {};
+      this.loadDynamicFilter = true
     },
     deepCamelCase(obj) {
       if (_.isArray(obj)) {
