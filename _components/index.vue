@@ -2079,6 +2079,8 @@ export default {
       }
     },
     updateDynamicFilterValues(filters) {
+      // Preserve the current search value in the filters if it exists
+      if(this.table.filter.search) filters.search = this.table.filter.search;
       this.dynamicFilterValues = filters;
       this.table.filter = filters;
       this.getDataTable(true, filters, { page: 1 });
