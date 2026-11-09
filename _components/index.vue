@@ -805,7 +805,7 @@ export default {
       sortedColumns: [],
       showAllRows: false,
       dataDynamicCrud: null,
-      loadDynamicFilter: false
+      loadDynamicFilter: true
     };
   },
   computed: {
@@ -2094,20 +2094,25 @@ export default {
       this.showAllRows = !this.showAllRows;
     },
     async getDynamicCrud() {
-      const params = {
-        refresh: true,
-        params: {
-          filter: { field: 'key' },
-        },
-      };
+      try {
+        const params = {
+          refresh: true,
+          params: {
+            filter: { field: 'key' },
+          },
+        };
 
-      const response = await this.$crud.show(
-        'apiRoutes.qsite.cruds',
-        this.$route.name,
-        params
-      );
-      this.dataDynamicCrud = response.data || {};
-      this.loadDynamicFilter = true
+        const response = await this.$crud.show(
+          'apiRoutes.qsite.cruds',
+          this.$route.name,
+          params
+        );
+        this.dataDynamicCrud = response.data || {};
+        this.loadDynamicFilter = true
+      } catch (err) {
+        console.log(err);
+        this.loadDynamicFilter = true
+      }
     },
     deepCamelCase(obj) {
       if (_.isArray(obj)) {
