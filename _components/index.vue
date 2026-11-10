@@ -805,7 +805,7 @@ export default {
       sortedColumns: [],
       showAllRows: false,
       dataDynamicCrud: null,
-      loadDynamicFilter: true
+      loadDynamicFilter: false
     };
   },
   computed: {
