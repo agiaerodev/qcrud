@@ -7,11 +7,13 @@
           :extra-actions="tableActions"
           :excludeActions="excludeActions"
           :searchAction="params.read.searchAction"
+          :refreshOptions="params.read?.refreshOptions"
           :title="tableTitle"
           @search="(val) => search(val)"
           @new="handlerActionCreate()"
           @refresh="getDataTable(true)"
-          :multipleRefresh="true"
+          @refresh-by-time="(prefix) => $emit('refresh-by-time', prefix)"
+          :multipleRefresh="params?.read?.multipleRefresh || true"
           ref="pageActionRef"
           :tour-name="tourName"
           :help="help"
@@ -708,7 +710,7 @@ export default {
     params: { default: false },
     title: { default: '' },
   },
-  emits: ['update', 'create', 'deleted'],
+  emits: ['update', 'create', 'deleted', 'refresh-by-time'],
   components: {
     masterExport,
     recursiveItemDraggable,
