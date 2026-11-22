@@ -13,7 +13,8 @@
           @new="handlerActionCreate()"
           @refresh="getDataTable(true)"
           @refresh-by-time="(prefix) => $emit('refresh-by-time', prefix)"
-          :multipleRefresh="params?.read?.multipleRefresh || true"
+          :multipleRefresh="multipleRefresh" 
+          :refresh-time-preference-key="userPreferencesKeys.refreshTime"
           ref="pageActionRef"
           :tour-name="tourName"
           :help="help"
@@ -1204,15 +1205,23 @@ export default {
       return this.showAllRows
         ? this.$tr('isite.cms.label.showLess')
         : this.$tr('isite.cms.label.showMore');
+    },        
+    refreshTimePreferenceKey() {
+      return `${this.params.apiRoute}-refresh-time`;
     },
-    visibleColumnsKey(){
-      return `${this.params.apiRoute}-table-columns`
-    },
-    rowsPerPageKey() {
-      return `${this.params.apiRoute}-rows-per-page`;
+    userPreferencesKeys() {
+      const apiRoute = this.params.apiRoute;
+      return {
+        visibleColumns: `${apiRoute}-table-columns`,
+        rowsPerPage: `${apiRoute}-rows-per-page`,
+        refreshTime: `${apiRoute}-refresh-time`
+      }
     },
     stickyHeaderClass() {
       return this.table.pagination.rowsPerPage > 10 ? 'sticky-header-table' : '';
+    }, 
+    multipleRefresh() {
+      return (this.params?.read?.refreshOptions?.length > 0 ) || this.params?.read?.multipleRefresh;
     }
   },
   methods: {
@@ -2140,16 +2149,16 @@ export default {
     },
 
     setRowsPerPage(){
-      const preferences = getUserPreferences(this.rowsPerPageKey)
+      const preferences = getUserPreferences(this.userPreferencesKeys.rowsPerPage)
       this.table.pagination.rowsPerPage = preferences || 10
     },
     async updateRowsPerPage(){
-      await updateOrCreateUserPreferences(this.rowsPerPageKey, this.table.pagination.rowsPerPage)
+      await updateOrCreateUserPreferences(this.userPreferencesKeys.rowsPerPage, this.table.pagination.rowsPerPage)
     },
 
     /* set table visible columns form user-preferences */
     setVisibleColumns(cols){
-      let preferences = getUserPreferences(this.visibleColumnsKey)
+      let preferences = getUserPreferences(this.userPreferencesKeys.visibleColumns)
       let userCols = null
         if(preferences){
           this.sortedColumns = preferences
@@ -2161,7 +2170,7 @@ export default {
     /* saves table visible columns on user-preferences */
     updateVisibleColumns(cols){
       this.visibleColumns = cols.filter(item => item.show == true).map(item => item.name)
-      updateOrCreateUserPreferences(this.visibleColumnsKey, cols)
+      updateOrCreateUserPreferences(this.userPreferencesKeys.visibleColumns, cols)
     },
     /* restores the */
     resetVisibleColumns(){
@@ -2176,8 +2185,7 @@ export default {
           show: true
         }
       })
-
-      updateOrCreateUserPreferences(this.visibleColumnsKey, cols)
+      updateOrCreateUserPreferences(this.userPreferencesKeys.visibleColumns, cols)
     }
   },
 };
