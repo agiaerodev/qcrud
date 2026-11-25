@@ -15,6 +15,7 @@
           @refresh-by-time="(prefix) => $emit('refresh-by-time', prefix)"
           :multipleRefresh="multipleRefresh" 
           :refresh-time-preference-key="userPreferencesKeys.refreshTime"
+          :filters-values-preference-key="userPreferencesKeys.filtersValues"
           ref="pageActionRef"
           :tour-name="tourName"
           :help="help"
@@ -1214,7 +1215,8 @@ export default {
       return {
         visibleColumns: `${apiRoute}-table-columns`,
         rowsPerPage: `${apiRoute}-rows-per-page`,
-        refreshTime: `${apiRoute}-refresh-time`
+        refreshTime: `${apiRoute}-refresh-time`, 
+        filtersValues: `${apiRoute}-filters-values`
       }
     },
     stickyHeaderClass() {
@@ -2160,10 +2162,23 @@ export default {
     setVisibleColumns(cols){
       let preferences = getUserPreferences(this.userPreferencesKeys.visibleColumns)
       let userCols = null
-        if(preferences){
-          this.sortedColumns = preferences
-          userCols = preferences.filter(item => item.show == true).map(item => item.name)
+      
+      if(preferences){
+        // Filter columns that exist in cols but not in preferences (new columns)
+        const newCols = cols.filter(col => !preferences.some(pref => pref.name === col))
+        
+        // If there are new columns, add them to preferences with show: true
+        if(newCols.length > 0){
+          const addedCols = newCols.map(col => ({ name: col, show: true }))
+          preferences = [...preferences, ...addedCols]
+          // Save the updated preferences to user storage
+          updateOrCreateUserPreferences(this.userPreferencesKeys.visibleColumns, preferences)
         }
+        
+        this.sortedColumns = preferences
+        // Filter only visible columns (show == true) and extract their names
+        userCols = preferences.filter(item => item.show == true).map(item => item.name)
+      }
 
       this.visibleColumns =  userCols ? userCols : cols
     },
