@@ -2171,7 +2171,16 @@ export default {
         if(newCols.length > 0){
           const addedCols = newCols.map(col => ({ name: col, show: true }))
           preferences = [...preferences, ...addedCols]
-          // Save the updated preferences to user storage
+        }
+        
+        // Filter out columns that no longer exist in cols (removed columns)
+        const removedCols = preferences.filter(pref => !cols.includes(pref.name))
+        if(removedCols.length > 0){
+          preferences = preferences.filter(pref => cols.includes(pref.name))
+        }
+        
+        // Save the updated preferences to user storage if there were changes
+        if(newCols.length > 0 || removedCols.length > 0){
           updateOrCreateUserPreferences(this.userPreferencesKeys.visibleColumns, preferences)
         }
         
