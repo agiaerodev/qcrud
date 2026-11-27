@@ -278,7 +278,9 @@ export default {
           props: {
             key: this.$uid(),
             label: (this.params?.create.title || ''),
-            clearable: false,
+            clearable: this.defaultConfig?.clearable ?? false,
+            outlined: true,
+            unelevated: false,
             sortValueBy: 'INDEX',
             searchNested: true,
             flat: this.crudProps.multiple,
